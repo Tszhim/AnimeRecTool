@@ -18,8 +18,7 @@ def get_season():
 
 # Get current year for query.
 def get_year():
-    curr_year = datetime.now().year
-    return curr_year
+    return datetime.now().year
 
 
 class AnimeNameRetriever:
@@ -28,11 +27,11 @@ class AnimeNameRetriever:
     def __init__(self):
         self.anime_list = []
         self.endpoint = "https://myanimelist.net/anime/season"
-        self.curr_season = get_season()
-        self.curr_year = get_year()
+        self.iterating_season = get_season()
+        self.iterating_year = get_year()
 
         # Change number here to retrieve all anime names from within the past x years.
-        while get_year() - self.curr_year < 1:
+        while get_year() - self.iterating_year < 3:
             self.retrieve_data()
 
     # Retrieving names and storing them.
@@ -48,14 +47,14 @@ class AnimeNameRetriever:
 
     # Updating endpoint as it progresses through past seasons and years.
     def update_endpoint(self):
-        if self.curr_season == "fall":
-            self.curr_season = "summer"
-        elif self.curr_season == "summer":
-            self.curr_season = "spring"
-        elif self.curr_season == "spring":
-            self.curr_season = "winter"
+        if self.iterating_season == "fall":
+            self.iterating_season = "summer"
+        elif self.iterating_season == "summer":
+            self.iterating_season = "spring"
+        elif self.iterating_season == "spring":
+            self.iterating_season = "winter"
         else:
-            self.curr_season = "fall"
-            self.curr_year = self.curr_year - 1
+            self.iterating_season = "fall"
+            self.iterating_year = self.iterating_year - 1
 
-        self.endpoint = f"https://myanimelist.net/anime/season/{self.curr_year}/{self.curr_season}"
+        self.endpoint = f"https://myanimelist.net/anime/season/{self.iterating_year}/{self.iterating_season}"

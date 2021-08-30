@@ -1,6 +1,10 @@
 from selenium import webdriver
-from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException
+from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException, TimeoutException
 import time
+
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait
 
 from anime import Anime
 
@@ -15,65 +19,92 @@ class AnimeDetailsRetriever:
     def navigate_to_details(self, anime_name):
         self.driver.get("https://google.com")
 
-        time.sleep(0.5)
+        WebDriverWait(self.driver, 3).until(ec.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[3]/form/div[1]/div[1]/div[1]/div/div[2]/input")))
         search_box = self.driver.find_element_by_xpath("/html/body/div[1]/div[3]/form/div[1]/div[1]/div[1]/div/div[2]/input")
         search_box.send_keys(f"MyAnimeList {anime_name} Anime")
         search_box.submit()
 
-        time.sleep(0.5)
+        WebDriverWait(self.driver, 5).until(ec.element_to_be_clickable((By.CSS_SELECTOR, "h3")))
         website_link = self.driver.find_element_by_css_selector("h3")
         website_link.click()
 
-        time.sleep(0.5)
-        try:
-            details_button = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[3]/div[2]/table/tbody/tr/td[2]/div[1]/div[2]/ul/li[1]/a")
-        except NoSuchElementException:
-            details_button = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[4]/div[2]/table/tbody/tr/td[2]/div[1]/div[2]/ul/li[1]/a")
-        details_button.click()
+        if "/anime/" in self.driver.current_url:
+            WebDriverWait(self.driver, 5).until(ec.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Details")))
+            details_button = self.driver.find_element_by_partial_link_text("Details")
+            details_button.click()
+            return True
+        else:
+            return False
 
     # Retrieving information about anime and constructing it into anime object.
     def get_details(self, anime_name):
-        self.navigate_to_details(anime_name)
+        cont = self.navigate_to_details(anime_name)
+        print(cont)
+        if cont is True:
+            try:
+                WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/div[3]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[1]/div")))
+                score_element = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[3]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[1]/div")
+            except TimeoutException:
+                try:
+                    score_element = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[4]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[1]/div")
+                except NoSuchElementException:
+                    score_element = self.driver.find_element_by_xpath("/html/body/div[1]/div/div[3]/div[2]/table/tbody/tr/td[2]/div/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[1]/div")
+            try:
+                rank_element = self.driver.find_element_by_xpath(
+                    "/html/body/div[1]/div[2]/div[3]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[2]/span[1]/strong")
+            except NoSuchElementException:
+                rank_element = self.driver.find_element_by_xpath(
+                    "/html/body/div[1]/div[2]/div[4]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[2]/span[1]/strong")
+            try:
+                popularity_element = self.driver.find_element_by_xpath(
+                    "/html/body/div[1]/div[2]/div[3]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[2]/span[2]/strong")
+            except NoSuchElementException:
+                popularity_element = self.driver.find_element_by_xpath(
+                    "/html/body/div[1]/div[2]/div[4]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[2]/span[2]/strong")
 
-        time.sleep(0.5)
-        try:
-            score_element = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[3]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[1]/div")
-        except NoSuchElementException:
-            score_element = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[4]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[1]/div")
-        try:
-            rank_element = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[3]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[2]/span[1]/strong")
-        except NoSuchElementException:
-            rank_element = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[4]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[2]/span[1]/strong")
-        try:
-            popularity_element = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[3]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[2]/span[2]/strong")
-        except NoSuchElementException:
-            popularity_element = self.driver.find_element_by_xpath("/html/body/div[1]/div[2]/div[4]/div[2]/table/tbody/tr/td[2]/div[1]/table/tbody/tr[1]/td/div[1]/div[1]/div[1]/div[1]/div[2]/span[2]/strong")
-        ep, air, prod, stud = self.sort_info()
-        episodes_element = ep
-        air_date_element = air
-        producers_element = prod
-        studios_element = stud
+            genre_elements = self.retrieve_genre_spans()
+            ep, air, prod, stud = self.sort_table_info()
 
-        score = score_element.text
-        try:
-            rank = rank_element.text.split("#")[1]
-        except IndexError:
-            rank = "?"
-        popularity = popularity_element.text.split("#")[1]
-        episodes = episodes_element.text.split(" ")[1]
-        start_date = air_date_element.text.split(" to ")[0].split(": ")[1]
-        try:
-            end_date = air_date_element.text.split(" to ")[1]
-        except IndexError:
-            end_date = "?"
-        producers = producers_element.text.split(": ")[1]
-        studios = studios_element.text.split(": ")[1]
+            episodes_element = ep
+            air_date_element = air
+            producers_element = prod
+            studios_element = stud
 
-        packaged_anime = Anime(anime_name, score, rank, popularity, episodes, start_date, end_date, producers, studios)
-        return packaged_anime
+            score = score_element.text
+            try:
+                rank = rank_element.text.split("#")[1]
+            except IndexError:
+                rank = "?"
+            popularity = popularity_element.text.split("#")[1]
+
+            genres = ""
+            for i in range(0, len(genre_elements)):
+                if i != len(genre_elements) - 1:
+                    genres = genres + genre_elements[i].get_attribute("innerHTML") + ", "
+                else:
+                    genres = genres + genre_elements[i].get_attribute("innerHTML")
+
+            episodes = episodes_element.text.split(" ")[1]
+            start_date = air_date_element.text.split(" to ")[0].split(": ")[1]
+            try:
+                end_date = air_date_element.text.split(" to ")[1]
+            except IndexError:
+                end_date = "?"
+            producers = producers_element.text.split(": ")[1]
+            studios = studios_element.text.split(": ")[1]
+
+            packaged_anime = Anime(anime_name, score, rank, popularity, genres, episodes, start_date, end_date, producers,
+                                   studios)
+            return packaged_anime
+        else:
+            return None
+
+    def retrieve_genre_spans(self):
+        genre_elements = self.driver.find_elements_by_xpath("//span[@itemprop='genre']")
+        return genre_elements
 
     # Helper function for get_details() to ensure each element is identified correctly.
-    def sort_info(self):
+    def sort_table_info(self):
         episodes_element = None
         air_date_element = None
         producers_element = None
@@ -94,5 +125,3 @@ class AnimeDetailsRetriever:
                 studios_element = info_block.find_element_by_xpath("./..")
 
         return episodes_element, air_date_element, producers_element, studios_element
-
-

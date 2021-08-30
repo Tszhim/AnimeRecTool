@@ -13,6 +13,7 @@ class DatafileManager:
             "Score": [anime.score],
             "Rank": [anime.rank],
             "Popularity": [anime.popularity],
+            "Genres": [anime.genres],
             "Episodes": [anime.episodes],
             "Start Date": [anime.start_date],
             "End Date": [anime.end_date],
