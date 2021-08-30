@@ -31,7 +31,7 @@ class AnimeNameRetriever:
         self.iterating_year = get_year()
 
         # Change number here to retrieve all anime names from within the past x years.
-        while get_year() - self.iterating_year < 3:
+        while get_year() - self.iterating_year < 5:
             self.retrieve_data()
 
     # Retrieving names and storing them.

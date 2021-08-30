@@ -24,7 +24,7 @@ class DatafileManager:
         df.to_csv(self.save_location, mode="a", index=False, header=False)
 
     def name_exists(self, anime_name):
-        with open("all_anime_data.csv", "r", encoding="utf-8") as f:
+        with open(self.save_location, "r", encoding="utf-8") as f:
             csv_reader = csv.reader(f, delimiter=",")
             for row in csv_reader:
                 if len(row) != 0 and anime_name in row[0]:

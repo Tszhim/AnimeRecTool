@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
@@ -16,7 +17,7 @@ class AnimeDetailsRetriever:
     def navigate_to_details(self, anime_name):
         self.driver.get("https://google.com")
 
-        search_box = WebDriverWait(self.driver, 3).until(ec.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[3]/form/div[1]/div[1]/div[1]/div/div[2]/input")))
+        search_box = WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[3]/form/div[1]/div[1]/div[1]/div/div[2]/input")))
         search_box.send_keys(f"MyAnimeList {anime_name} Anime")
         search_box.submit()
 
@@ -24,9 +25,12 @@ class AnimeDetailsRetriever:
         website_link.click()
 
         if "/anime/" in self.driver.current_url:
-            details_button = WebDriverWait(self.driver, 5).until(ec.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Details")))
-            details_button.click()
-            return True
+            try:
+                details_button = WebDriverWait(self.driver, 5).until(ec.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Details")))
+                details_button.click()
+                return True
+            except TimeoutException:
+                return False
         else:
             return False
 
@@ -35,19 +39,20 @@ class AnimeDetailsRetriever:
         cont = self.navigate_to_details(anime_name)
         print(cont)
         if cont is True:
-            score_block = WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.CSS_SELECTOR, ".fl-l.score")))
+            score_block = WebDriverWait(self.driver, 5).until(ec.element_to_be_clickable((By.CSS_SELECTOR, ".fl-l.score")))
             score_element = score_block.find_element_by_xpath("*")
-            print(score_element.text)
 
             rank_block = WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.CSS_SELECTOR, ".numbers.ranked")))
             rank_element = rank_block.find_element_by_xpath("*")
-            print(rank_element.text)
 
             popularity_block = WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.CSS_SELECTOR, ".numbers.popularity")))
             popularity_element = popularity_block.find_element_by_xpath("*")
-            print(popularity_element.text)
 
-            genre_elements = self.driver.find_elements_by_xpath("//span[@itemprop='genre']")
+            try:
+                genre_elements = WebDriverWait(self.driver, 5).until(ec.presence_of_all_elements_located((By.XPATH, "//span[@itemprop='genre']")))
+            except TimeoutException:
+                genre_elements = []
+
             ep, air, prod, stud = self.sort_table_info()
 
             episodes_element = ep
@@ -69,14 +74,14 @@ class AnimeDetailsRetriever:
         producers_element = None
         studios_element = None
 
-        info_blocks = self.driver.find_elements_by_class_name("spaceit")
+        info_blocks = WebDriverWait(self.driver, 5).until(ec.presence_of_all_elements_located((By.CLASS_NAME, "spaceit")))
         for info_block in info_blocks:
             if "Episodes:" in info_block.text:
                 episodes_element = info_block
             elif "Aired:" in info_block.text:
                 air_date_element = info_block
 
-        info_blocks = self.driver.find_elements_by_class_name("dark_text")
+        info_blocks = WebDriverWait(self.driver, 5).until(ec.presence_of_all_elements_located((By.CLASS_NAME, "dark_text")))
         for info_block in info_blocks:
             if "Producers:" in info_block.text:
                 producers_element = info_block.find_element_by_xpath("./..")

@@ -1,6 +1,6 @@
 class Anime:
 
-    def __init__(self, name, score, rank, popularity, genres, episodes, start_date, end_date, producers, studios):
+    def __init__(self, %):
         self.name = name
         self.score = score
         self.rank = rank
